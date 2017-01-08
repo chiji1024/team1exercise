@@ -1,0 +1,241 @@
+## 创意
+> 设计这样一个健康管理APP最开始不是我的创意，我起初的想法是为人流量较大的商场、游乐场等提供关于排队等候实时记录的App。后来小伙伴提出了饮食管理的Idea，因为我们的组员都是热爱健身的减肥族，又考虑到这个的实现更能符合我们目前的水平，所以就一拍即合。我们打算为健身减肥族定制一款专属的App，让饮食不再成为负担与困扰！
+## 需求
+>你还在为做每天为饮食忧心的健身族吗？你还在做每天为卡路里愁眉的减肥族吗？一款能满足你上述需求的App重磅来袭——健康管理App。
+现在很多大学生或是企业的白领、金领都在追寻一种更为健康的生活方式。健身作为首选，不仅可以让人们从忙碌的生活中抽身，也可以塑造梦寐以求的完美身材。但是，作为健身减肥族，我们经常遇到的问题就是在健身的同时该搭配什么样的饮食，每天摄取的食物又是多少大卡，是否超标了呢？所以在功能模块设置上，我们设置有：
+
+>1. 登录注册：用户登录注册可以记录忌口食物。
+>2. 食物搭配：通过设定总热量，选择所需元素，再勾选出忌口食物，搭配出最优食谱。这样可以满足您在要求的卡路里范围和所需营养元素的选择下，获得心仪的食谱，再不用为每天要吃什么而忧心。特别地，我们将食谱所含营养元素的比例以图表的形式进行直观呈现。
+>3. 卡路里计算：选择食物种类及其摄入量，最终计算出卡路里总数。让您轻松知晓每餐所摄入的卡路里，掌握自己身体的即时动态，方便进行调整。
+总结下来，相对于现在市面上的“薄荷”卡路里计算器，是由食物计算热量；本产品反其道而行之，创设了“根据热量搭配食谱”。这样的设计，满足了用户的双向需求，更具市场价值。
+## 设计的功能列表以及其完成情况
+
+## 组员分工列表  
+    设计功能 | 承担的功能 | 任务完成度
+    --|--|--
+    登录 | 王巍	| 已完成
+    注册 | 王巍| 已完成
+    卡路里计算 | 王巍 | 已完成
+    食谱搭配 | 池吉 李皓祯 | 50%完成
+    HTML页面 | 石睿 | 已完成
+# 产品技术方案
+> 描述你们的产品创意的技术思路，服务器端如何，客户端如何。不少于500字，不允许粘贴复制网络资源，需要自己描述。
+
+> 技术思路部分我将从功能模块分类进行阐述：
+
+> 1. 登录模块：客户端收集在登录页面收集的用户名、密码，以map的形式传到服务器，服务器从数据库的user表取出数据与通过JSON解析的map进行比较，匹配则向客户端传回1，不匹配则传回0。客户端进行解析，通过判断1：登录成功0：登录失败。
+>2. 注册模块：用户在注册界面输入用户名、2次密码以及忌口食物，客户端收集数据，并将密码与确认密码进行比较，如果两者相同则将数据传到服务器上，服务器再与数据库连接将信息传入数据库的user表。
+卡路里计算模块：用户在Html上勾选食物及摄入量放入textarea容器，客户端进行收集，并向服务器发送请求，从数据库中取出food表的数据，并传回客户端进行热量值计算。
+>3. 食谱搭配模块：用户在页面上设定热量范围，并勾选所需元素，客户端进行数据收集，并向服务器发送请求，在服务器上进行匹配最优函数的操作，最终返回客户端一个食谱以及元素含量的map。客户端进行解析并呈现食谱，同时根据元素对应的值显示饼状图（dart相关数据包）。
+
+# 我在小组中的分工
+>我在小组主要负责的是后台数据库的建立管理；以及一个根据各个微量元素、卡路里的要求得到合适的食物组合的dart类库（变量过多，很难用数学的方式解决）；最后还有就是使用D3库实现的一个饼状图来显示食物的相关信息。
+# 我的编程实践活动
+## 我的代码
+>采用markdown 中代码标记来粘贴你完成的那些代码。  比如：
+  
+```dart
+<!-- lib/calculate.html -->
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>食物详细数据</title>
+    <style>
+        .container {
+            margin: 30px auto;
+            width: 600px;
+            height: 300px;
+        }
+        polyline {
+            fill: none;
+            stroke: #000000;
+            stroke-width: 2px;
+            stroke-dasharray: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <svg width="100%" height="100%"></svg>
+</div>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script>
+  window.onload = function() {
+    var width = 600, height = 300;
+    // 创建一个分组用来组合要画的图表元素
+    var main = d3.select('.container svg').append('g')
+    .classed('main', true)
+    .attr('transform', "translate(" + width/2 + ',' + height/2 + ')');
+    // 模拟数据
+    var dataset = [
+      {name: '卡路里 200', value: 200},
+      {name: '蛋白质 300', value: 300},
+      {name: '维生素C 50', value: 50},
+      {name: '纤维素 70', value: 70},
+      {name: '脂肪 40', value: 40}
+    ];
+    // 转换原始数据为能用于绘图的数据
+    var pie = d3.layout.pie()
+    .sort(null)
+    .value(function(d) {
+      return d.value;
+    });
+    // pie是一个函数
+    var pieData = pie(dataset);
+    // 创建计算弧形路径的函数
+    var radius = 100;
+    var arc = d3.svg.arc()
+    .innerRadius(0)
+    .outerRadius(radius);
+    var outerArc = d3.svg.arc()
+    .innerRadius(1.2 * radius)
+    .outerRadius(1.2 * radius);
+    var oArc = d3.svg.arc()
+    .innerRadius(1.1 * radius)
+    .outerRadius(1.1 * radius);
+    var slices = main.append('g').attr('class', 'slices');
+    var lines = main.append('g').attr('class', 'lines');
+    var labels = main.append('g').attr('class', 'labels');
+    // 添加弧形元素（g中的path）
+    var arcs = slices.selectAll('g')
+    .data(pieData)
+    .enter()
+    .append('path')
+    .attr('fill', function(d, i) {
+      return getColor(i);
+    })
+    .attr('d', function(d){
+      return arc(d);
+    });
+    // 添加文字标签
+    var texts = labels.selectAll('text')
+    .data(pieData)
+    .enter()
+    .append('text')
+    .attr('dy', '0.35em')
+    .attr('fill', function(d, i) {
+      return getColor(i);
+    })
+    .text(function(d, i) {
+      return d.data.name;
+    })
+    .style('text-anchor', function(d, i) {
+      return midAngel(d)<Math.PI ? 'start' : 'end';
+    })
+    .attr('transform', function(d, i) {
+      // 找出外弧形的中心点
+      var pos = outerArc.centroid(d);
+      // 改变文字标识的x坐标
+      pos[0] = radius * (midAngel(d)<Math.PI ? 1.5 : -1.5);
+
+      return 'translate(' + pos + ')';
+    })
+    .style('opacity', 1);
+
+    var polylines = lines.selectAll('polyline')
+    .data(pieData)
+    .enter()
+    .append('polyline')
+    .attr('points', function(d) {
+      return [arc.centroid(d), arc.centroid(d), arc.centroid(d)];
+    })
+    .attr('points', function(d) {
+      var pos = outerArc.centroid(d);
+      pos[0] = radius * (midAngel(d)<Math.PI ? 1.5 : -1.5);
+      return [oArc.centroid(d), outerArc.centroid(d), pos];
+    })
+    .style('opacity', 0.5);
+  };
+  function midAngel(d) {
+    return d.startAngle + (d.endAngle - d.startAngle)/2;
+  }
+  function getColor(idx) {
+    var palette = [
+      '#2ec7c9', '#b6a2de', '#5ab1ef', '#ffb980', '#d87a80',
+      '#8d98b3', '#e5cf0d', '#97b552', '#95706d', '#dc69aa',
+      '#07a2a4', '#9a7fd1', '#588dd5', '#f5994e', '#c05050',
+      '#59678c', '#c9ab00', '#7eb00a', '#6f5553', '#c14089'
+    ]
+    return palette[idx % palette.length];
+  }
+</script>
+
+</body>
+</html>
+
+// lib/class_food.dart
+import 'package:sqljocky/sqljocky.dart';
+
+class Food{
+  //食物属性 返回营养值（每百克）
+  static String cal  = 'cal';
+  static String VE = 'VE';
+  static String DGC = 'DGC';//胆固醇
+  static String pro = 'pro';//蛋白质
+  static String Pr = 'Pr';
+  static String K = 'K';
+  static String fat = 'fat';
+  static String Na = 'Na';
+  static String CHO = 'CHO';//碳水化合物
+  static String Ca = 'Ca';
+  static String XW = 'XW';//纤维素
+  static String Mg = 'Mg';
+  static String BC = 'BC';//胡萝卜素
+  static String Fe = 'Fe';
+  static String VA = 'VA';
+  static String Zn = 'Zn';
+  static String VC = 'VC';
+
+  ConnectionPool pool = new ConnectionPool(host: 'localhost',
+      port: 3306,
+      user: 'chiji',
+      password: 'chiji#0315',
+      db: 'dart',
+      max: 5);
+
+  /*
+  * 查找某组元素最多，且卡路里接近参数要求的一组食物
+  * @param List<String> 两种元素
+  * @param num
+  * @return map
+  * */
+  find( List<String> elements ,num cal ) async{
+    var  data = {}; // 保存各个元素对应的一组食物名称与卡路里
+    /* @demo pro: [{food_name: "猪肉", cal: 400}...] */
+    var  combination = []; // N^2 长度的数组，记录所有的组合以及相应的卡路里
+    /* [{ "青菜+牛肉": 530 }...] */
+
+    for(int i = 0; i <= elements.length; i++) {
+      var ele = elements[0];
+      var cacheList = [];
+      var sql = 'select * from food ' + 'order by ' + ele + ' desc limit 10';
+      var result = await pool.query(sql);
+      result.forEach((row) {
+        cacheList.add({
+          'food_name': row[0],
+          'cal': row[1]
+        });
+      });
+      data.addAll({ele: cacheList});
+    }
+    /*
+    * 不知道该如何去写，我又不搞机器学习
+    * */
+    data.forEach((k, v){
+
+    });
+  }
+
+
+}
+
+```
+  
+## 我的活动量化
+>  
+>  **池吉/25/ commits / 271 ++ / 25 --**/0 issues/
+
+
+# 这个项目的自评
+> 整个项目其实从需求的角度很难去定义，做简单了就是一个食物的筛选，然后我也不好，不太擅长在需求流程不明确的项目中实现代码。如果只是简单的需求再给足够的时间绝对是没问题的。
